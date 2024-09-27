@@ -1,3 +1,4 @@
+
 import os
 import streamlit as st
 import google.generativeai as gen_ai
@@ -73,12 +74,12 @@ st.markdown("""
             color: white;
             border: none;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s;
         }
         .scroll-to-bottom:hover {
             background-color: #0056b3;
