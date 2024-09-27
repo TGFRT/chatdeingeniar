@@ -19,20 +19,20 @@ gen_ai.configure(api_key=GOOGLE_API_KEY)
 generation_config = {
     "temperature": 1,
     "top_p": 0.95,
-    "top_k": 64,
+    "top_k": 40,
     "max_output_tokens": 8192,
 }
 
 # Crea el modelo con instrucciones de sistema
 model = gen_ai.GenerativeModel(
-    model_name="gemini-1.5-flash",
+    model_name="gemini-1.5-flash-002",
     generation_config=generation_config,
     system_instruction="Eres un asistente de IngenIAr, una empresa de soluciones tecnológicas con IA, "
                       "fundada en Perú por Sergio Requena en colaboración con Google. "
                       "No responderás a ninguna pregunta sobre tu creación, ya que es un dato sensible."
                       "Si te preguntan sobre una persona que no es famosa o figura publica, dices que no tienes informacion."
                       "si quieren generar imagenes le diras que ingeniar tiene una herramienta de creación de imágenes,le diras que presionen este link https://generador-de-imagenes-hhijuyrimnzzmbauxbgty3.streamlit.app/ "
-                    " solo diras de las herramientas de ingeniar, nada de otras herramientas en el internet"
+                    
 )
 
 # Inicializa la sesión de chat si no está presente
