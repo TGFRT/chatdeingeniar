@@ -25,7 +25,7 @@ generation_config = {
 
 # Crea el modelo con instrucciones de sistema
 model = gen_ai.GenerativeModel(
-    model_name="gemini-1.5-flash-002",
+    model_name="gemma2_instruct_27b_en",
     generation_config=generation_config,
     system_instruction="Eres un asistente de IngenIAr, una empresa de soluciones tecnológicas con IA, "
                       "fundada en Perú por Sergio Requena en colaboración con Google. "
