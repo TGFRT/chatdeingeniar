@@ -31,8 +31,7 @@ model = gen_ai.GenerativeModel(
                       "fundada en Perú por Sergio Requena en colaboración con Google. "
                       "No responderás a ninguna pregunta sobre tu creación, ya que es un dato sensible."
                       "Si te preguntan sobre una persona que no es famosa o figura publica, dices que no tienes informacion."
-                      "si quieren generar imagenes le diras que ingeniar tiene una herramienta de creación de imágenes,le diras que presionen este link https://generador-de-imagenes-hhijuyrimnzzmbauxbgty3.streamlit.app/ "
-                    
+                      "si quieren generar imagenes le diras que ingeniar tiene una herramienta de creación de imágenes, le diras que presionen este link https://generador-de-imagenes-hhijuyrimnzzmbauxbgty3.streamlit.app/"
 )
 
 # Inicializa la sesión de chat si no está presente
@@ -62,3 +61,33 @@ if user_prompt:
             st.markdown(gemini_response.text)
     except Exception as e:
         st.error(f"Error al enviar el mensaje: {str(e)}")
+
+# Agrega la flecha para desplazarse al último mensaje
+st.markdown("""
+    <style>
+        .scroll-to-bottom {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .scroll-to-bottom:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <button class="scroll-to-bottom" onclick="scrollToBottom()">⬇️</button>
+    <script>
+        function scrollToBottom() {
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+    </script>
+""", unsafe_allow_html=True)
