@@ -1,4 +1,3 @@
-
 import os
 import streamlit as st
 import google.generativeai as gen_ai
@@ -62,33 +61,3 @@ if user_prompt:
             st.markdown(gemini_response.text)
     except Exception as e:
         st.error(f"Error al enviar el mensaje: {str(e)}")
-
-# Agrega la flecha para desplazarse al último mensaje
-st.markdown("""
-    <style>
-        .scroll-to-bottom {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transition: background-color 0.3s;
-        }
-        .scroll-to-bottom:hover {
-            background-color: #0056b3;
-        }
-    </style>
-    <button class="scroll-to-bottom" onclick="scrollToBottom()">⬇️</button>
-    <script>
-        function scrollToBottom() {
-            window.scrollTo(0, document.body.scrollHeight);
-        }
-    </script>
-""", unsafe_allow_html=True)
