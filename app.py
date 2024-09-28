@@ -1,7 +1,6 @@
 import os
 import streamlit as st
 import google.generativeai as gen_ai
-import io
 
 # Configura Streamlit
 st.set_page_config(
@@ -16,7 +15,7 @@ GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 # Configura el modelo de Google Gemini
 gen_ai.configure(api_key=GOOGLE_API_KEY)
 
-# Configuración de generación
+# Configura la generación
 generation_config = {
     "temperature": 1,
     "top_p": 0.95,
@@ -32,17 +31,12 @@ model = gen_ai.GenerativeModel(
                       "fundada en Perú por Sergio Requena en colaboración con Google. "
                       "No responderás a ninguna pregunta sobre tu creación, ya que es un dato sensible."
                       "Si te preguntan sobre una persona que no es famosa o figura publica, dices que no tienes informacion."
-                      "Si quieren generar imágenes, les dirás que IngenIAr tiene una herramienta de creación de imágenes, les dirás que presionen este link: https://generador-de-imagenes-hhijuyrimnzzmbauxbgty3.streamlit.app/"
+                      "si quieren generar imagenes le diras que ingeniar tiene una herramienta de creación de imágenes, le diras que presionen este link https://generador-de-imagenes-hhijuyrimnzzmbauxbgty3.streamlit.app/"
 )
 
 # Inicializa la sesión de chat si no está presente
 if "chat_session" not in st.session_state:
     st.session_state.chat_session = model.start_chat(history=[])
-
-# Inicializa el estado para almacenar el PDF subido
-if "uploaded_pdf" not in st.session_state:
-    st.session_state.uploaded_pdf = None
-    st.session_state.pdf_uploaded = False
 
 # Título del chatbot
 st.title("🤖 IngenIAr - Chat")
@@ -53,41 +47,17 @@ for message in st.session_state.chat_session.history:
     with st.chat_message(role):
         st.markdown(message.parts[0].text)
 
-# Mostrar un campo de entrada de chat con el ícono de clip
-col1, col2 = st.columns([0.1, 0.9])
+# Campo de entrada para el mensaje del usuario
+user_prompt = st.chat_input("Pregunta a IngenIAr...")
+if user_prompt:
+    # Agrega el mensaje del usuario al chat y muéstralo
+    st.chat_message("user").markdown(user_prompt)
 
-# Columna 1: Ícono de clip para subir archivo
-with col1:
-    uploaded_file = st.file_uploader("", type="pdf", label_visibility="collapsed", key="file_uploader")
-
-# Columna 2: Campo de texto para el mensaje del usuario
-with col2:
-    if st.session_state.pdf_uploaded and st.session_state.uploaded_pdf:
-        user_prompt = st.text_input("Escribe tu mensaje...", "📄 Archivo adjunto: " + st.session_state.uploaded_pdf.name, key="user_input", label_visibility="collapsed")
-    else:
-        user_prompt = st.text_input("Escribe tu mensaje...", key="user_input", label_visibility="collapsed")
-
-# Manejar el archivo PDF cuando se suba
-if uploaded_file:
-    st.session_state.uploaded_pdf = uploaded_file
-    st.session_state.pdf_uploaded = True
-
-# Si se ha subido un PDF y el usuario ha escrito un mensaje
-if st.session_state.pdf_uploaded and user_prompt:
-    # Combina el mensaje del usuario con una notificación de archivo adjunto
-    combined_prompt = user_prompt + "\n\n📄 [Archivo PDF adjunto]"
-
-    # Envía el mensaje del usuario (solo con notificación de archivo adjunto) a Gemini y obtiene la respuesta
+    # Envía el mensaje del usuario a Gemini y obtiene la respuesta
     try:
-        gemini_response = st.session_state.chat_session.send_message(combined_prompt.strip())
-
+        gemini_response = st.session_state.chat_session.send_message(user_prompt.strip())
         # Muestra la respuesta de Gemini
         with st.chat_message("assistant"):
             st.markdown(gemini_response.text)
-
-        # Limpiar el estado del archivo PDF después de enviar
-        st.session_state.uploaded_pdf = None
-        st.session_state.pdf_uploaded = False
-
     except Exception as e:
         st.error(f"Error al enviar el mensaje: {str(e)}")
