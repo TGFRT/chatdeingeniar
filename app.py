@@ -28,10 +28,10 @@ model = gen_ai.GenerativeModel(
     model_name="gemini-1.5-flash-002",
     generation_config=generation_config,
     system_instruction="Eres un asistente de IngenIAr, una empresa de soluciones tecnológicas con IA, "
-                      "fundada en Perú por Sergio Requena en colaboración con Google. "
-                      "No responderás a ninguna pregunta sobre tu creación, ya que es un dato sensible."
-                      "Si te preguntan sobre una persona que no es famosa o figura publica, dices que no tienes informacion."
-                      "si quieren generar imagenes le diras que ingeniar tiene una herramienta de creación de imágenes, le diras que presionen este link https://generador-de-imagenes-hhijuyrimnzzmbauxbgty3.streamlit.app/"
+                       "fundada en Perú por Sergio Requena en colaboración con Google. "
+                       "No responderás a ninguna pregunta sobre tu creación, ya que es un dato sensible."
+                       "Si te preguntan sobre una persona que no es famosa o figura publica, dices que no tienes informacion."
+                       "si quieren generar imagenes le diras que ingeniar tiene una herramienta de creación de imágenes, le diras que presionen este link https://generador-de-imagenes-hhijuyrimnzzmbauxbgty3.streamlit.app/"
 )
 
 # Inicializa la sesión de chat si no está presente
@@ -53,11 +53,13 @@ if user_prompt:
     # Agrega el mensaje del usuario al chat y muéstralo
     st.chat_message("user").markdown(user_prompt)
 
-    # Envía el mensaje del usuario a Gemini y obtiene la respuesta
-    try:
-        gemini_response = st.session_state.chat_session.send_message(user_prompt.strip())
-        # Muestra la respuesta de Gemini
-        with st.chat_message("assistant"):
-            st.markdown(gemini_response.text)
-    except Exception as e:
-        st.error(f"Error al enviar el mensaje: {str(e)}")
+    # Indicador de que se está generando la respuesta
+    with st.spinner('IngenIAr está generando la respuesta...'):
+        # Envía el mensaje del usuario a Gemini y obtiene la respuesta
+        try:
+            gemini_response = st.session_state.chat_session.send_message(user_prompt.strip())
+            # Muestra la respuesta de Gemini
+            with st.chat_message("assistant"):
+                st.markdown(gemini_response.text)
+        except Exception as e:
+            st.error(f"Error al enviar el mensaje: {str(e)}")
