@@ -1,7 +1,6 @@
 import os
 import streamlit as st
 import google.generativeai as gen_ai
-import PyPDF2  # Para manejar la lectura de PDFs
 import io
 
 # Configura Streamlit
@@ -43,7 +42,6 @@ if "chat_session" not in st.session_state:
 # Inicializa el estado para almacenar el PDF subido
 if "uploaded_pdf" not in st.session_state:
     st.session_state.uploaded_pdf = None
-    st.session_state.pdf_text = ""
     st.session_state.pdf_uploaded = False
 
 # Título del chatbot
@@ -55,18 +53,6 @@ for message in st.session_state.chat_session.history:
     with st.chat_message(role):
         st.markdown(message.parts[0].text)
 
-# Función para leer PDF y extraer el texto
-def process_pdf(uploaded_file):
-    pdf_text = ""
-    try:
-        pdf_reader = PyPDF2.PdfReader(uploaded_file)
-        for page in pdf_reader.pages:
-            pdf_text += page.extract_text()
-        return pdf_text
-    except Exception as e:
-        st.error(f"Error al leer el PDF: {str(e)}")
-        return ""
-
 # Mostrar un campo de entrada de chat con el ícono de clip
 col1, col2 = st.columns([0.1, 0.9])
 
@@ -76,25 +62,22 @@ with col1:
 
 # Columna 2: Campo de texto para el mensaje del usuario
 with col2:
-    if st.session_state.pdf_uploaded:
-        st.text_input("Escribe tu mensaje...", "📄 Archivo adjunto: " + st.session_state.uploaded_pdf.name, key="user_input", label_visibility="collapsed")
+    if st.session_state.pdf_uploaded and st.session_state.uploaded_pdf:
+        user_prompt = st.text_input("Escribe tu mensaje...", "📄 Archivo adjunto: " + st.session_state.uploaded_pdf.name, key="user_input", label_visibility="collapsed")
     else:
         user_prompt = st.text_input("Escribe tu mensaje...", key="user_input", label_visibility="collapsed")
 
 # Manejar el archivo PDF cuando se suba
 if uploaded_file:
     st.session_state.uploaded_pdf = uploaded_file
-    st.session_state.pdf_text = process_pdf(uploaded_file)
     st.session_state.pdf_uploaded = True
 
 # Si se ha subido un PDF y el usuario ha escrito un mensaje
-if st.session_state.pdf_uploaded and st.session_state.user_input:
-    # Combina el mensaje del usuario con el contenido del PDF
-    combined_prompt = st.session_state.user_input
-    if st.session_state.pdf_text:
-        combined_prompt += f"\n\n**Contenido del PDF**: {st.session_state.pdf_text}"
+if st.session_state.pdf_uploaded and user_prompt:
+    # Combina el mensaje del usuario con una notificación de archivo adjunto
+    combined_prompt = user_prompt + "\n\n📄 [Archivo PDF adjunto]"
 
-    # Envía el mensaje del usuario (y el PDF si se subió) a Gemini y obtiene la respuesta
+    # Envía el mensaje del usuario (solo con notificación de archivo adjunto) a Gemini y obtiene la respuesta
     try:
         gemini_response = st.session_state.chat_session.send_message(combined_prompt.strip())
 
@@ -102,9 +85,8 @@ if st.session_state.pdf_uploaded and st.session_state.user_input:
         with st.chat_message("assistant"):
             st.markdown(gemini_response.text)
 
-        # Limpiar el texto del PDF después de enviar
+        # Limpiar el estado del archivo PDF después de enviar
         st.session_state.uploaded_pdf = None
-        st.session_state.pdf_text = ""
         st.session_state.pdf_uploaded = False
 
     except Exception as e:
