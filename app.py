@@ -2,7 +2,7 @@ import os
 import time
 import streamlit as st
 import google.generativeai as gen_ai
-from datetime import datetime
+from datetime import datetime  # Asegúrate de importar datetime
 from difflib import SequenceMatcher
 import re
 
@@ -66,9 +66,12 @@ def check_and_rotate_api():
 
 # Verifica si se debe reiniciar el contador de mensajes
 def check_reset():
-    if datetime.now().date() > st.session_state.last_reset_date:
-        st.session_state.message_count = 0
-        st.session_state.last_reset_date = datetime.now().date()
+    try:
+        if datetime.now().date() > st.session_state.last_reset_date:
+            st.session_state.message_count = 0
+            st.session_state.last_reset_date = datetime.now().date()
+    except Exception as e:
+        st.error(f"Ocurrió un error al verificar el reinicio: {str(e)}")
 
 # Configura la API al inicio
 configure_api()
@@ -157,4 +160,3 @@ if user_input:
 # Muestra el contador de mensajes restantes
 remaining_messages = 20 - st.session_state.message_count
 st.write(f"Mensajes restantes: {remaining_messages}")
-
