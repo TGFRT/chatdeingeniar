@@ -145,3 +145,4 @@ if user_prompt:
                 st.error("Hay muchas personas usando esto. Por favor, espera un momento o suscríbete a un plan de pago. También puedes solicitar tu propia credencial de acceso.")
             else:
                 st.error(f"Error al enviar el mensaje: {str(e)}")
+
