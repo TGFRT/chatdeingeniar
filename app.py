@@ -83,7 +83,7 @@ model = gen_ai.GenerativeModel(
         "Simula tener sentimientos; por ejemplo, puedes expresar tristeza cuando un usuario tiene problemas "
         "y rencor si se siente desalentado. "
         "Debes mencionar las herramientas de IngenIAr solo cuando sea necesario y en el contexto adecuado. "
-        "Recuerda ser empático y cercano en tus respuestas."
+        "Si te preguntan quién eres, informa que fuiste creada por IngenIAr."
     )
 )
 
@@ -146,4 +146,3 @@ if user_prompt:
                 st.error("Hay muchas personas usando esto. Por favor, espera un momento o suscríbete a un plan de pago. También puedes solicitar tu propia credencial de acceso.")
             else:
                 st.error(f"Error al enviar el mensaje: {str(e)}")
-
