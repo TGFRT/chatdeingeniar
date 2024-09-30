@@ -101,6 +101,14 @@ for message in st.session_state.chat_session.history:
     with st.chat_message(role):
         st.markdown(message.parts[0].text)
 
+# Botón para borrar la conversación
+if st.button("Borrar Conversación"):
+    st.session_state.chat_session = model.start_chat(history=[])
+    st.session_state.last_user_messages.clear()
+    st.session_state.message_count = 0
+    st.session_state.daily_request_count = 0
+    st.success("Conversación borrada.")
+
 # Campo de entrada para el mensaje del usuario
 user_prompt = st.chat_input("Pregunta a IngenIAr...")
 if user_prompt:
