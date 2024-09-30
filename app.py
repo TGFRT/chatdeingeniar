@@ -2,7 +2,7 @@ import os
 import time
 import streamlit as st
 import google.generativeai as gen_ai
-from datetime import datetime  # Importa datetime para manejar fecha y hora
+from datetime import datetime
 from difflib import SequenceMatcher
 import re
 
@@ -41,7 +41,7 @@ if "daily_request_count" not in st.session_state:
 if "message_count" not in st.session_state:
     st.session_state.message_count = 0
 if "last_reset_datetime" not in st.session_state:
-    st.session_state.last_reset_datetime = datetime.now()  # Usa datetime aquí
+    st.session_state.last_reset_datetime = datetime.now()  # Guarda la fecha y hora del último reinicio
 if "last_user_messages" not in st.session_state:
     st.session_state.last_user_messages = []
 
@@ -64,9 +64,10 @@ def check_and_rotate_api():
 # Verifica si se debe reiniciar el contador de mensajes
 def check_reset():
     try:
-        if datetime.now().date() > st.session_state.last_reset_datetime.date():  # Compara solo las fechas
-            st.session_state.message_count = 0
-            st.session_state.last_reset_datetime = datetime.now()  # Actualiza a datetime
+        # Compara la fecha del último reinicio con la fecha actual
+        if datetime.now().date() > st.session_state.last_reset_datetime.date():
+            st.session_state.message_count = 0  # Reinicia el contador de mensajes
+            st.session_state.last_reset_datetime = datetime.now()  # Actualiza la fecha
     except Exception as e:
         st.error(f"Ocurrió un error al verificar el reinicio: {str(e)}")
 
