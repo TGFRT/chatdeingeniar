@@ -4,7 +4,6 @@ import streamlit as st
 import google.generativeai as gen_ai
 from difflib import SequenceMatcher
 import re
-from collections import deque
 
 # Función para calcular la similitud entre dos textos
 def similar(a, b):
@@ -12,9 +11,12 @@ def similar(a, b):
 
 # Función para normalizar el texto
 def normalize_text(text):
-    text = text.lower()  # Convierte a minúsculas
-    text = re.sub(r'[^\w\s]', '', text)  # Elimina signos de puntuación
-    text = re.sub(r'(.)\1+', r'\1', text)  # Normaliza caracteres repetidos
+    # Convierte a minúsculas
+    text = text.lower()
+    # Elimina signos de puntuación
+    text = re.sub(r'[^\w\s]', '', text)
+    # Normaliza caracteres repetidos
+    text = re.sub(r'(.)\1+', r'\1', text)  # Reemplaza caracteres repetidos
     return text
 
 # Configura Streamlit
@@ -31,8 +33,6 @@ API_KEYS = [
     st.secrets["GOOGLE_API_KEY_3"],
     st.secrets["GOOGLE_API_KEY_4"],
     st.secrets["GOOGLE_API_KEY_5"],
-    st.secrets["GOOGLE_API_KEY_6"],
-    st.secrets["GOOGLE_API_KEY_7"],
 ]
 
 # Inicializa variables de estado
@@ -47,7 +47,7 @@ if "waiting" not in st.session_state:
 if "last_user_messages" not in st.session_state:
     st.session_state.last_user_messages = []
 if "message_timestamps" not in st.session_state:
-    st.session_state.message_timestamps = deque(maxlen=8)  # Limitar a 8 mensajes
+    st.session_state.message_timestamps = []
 
 # Configura la API con la clave actual
 def configure_api():
@@ -130,22 +130,24 @@ if user_prompt:
         if len(st.session_state.last_user_messages) > 10:  # Puedes ajustar el número según tus necesidades
             st.session_state.last_user_messages.pop(0)
 
-        # Agregar la marca de tiempo del nuevo mensaje
+        # Agrega la marca de tiempo del mensaje
         st.session_state.message_timestamps.append(time.time())
 
-        # Verificar si se han enviado más de 8 mensajes en los últimos 40 segundos
+        # Limitar el número de mensajes enviados en 40 minutos
+        if len(st.session_state.message_timestamps) > 8:
+            # Elimina marcas de tiempo que sean más viejas de 40 minutos
+            st.session_state.message_timestamps = [t for t in st.session_state.message_timestamps if time.time() - t <= 2400]  # 2400 segundos = 40 minutos
+
+        # Si hay más de 8 mensajes en los últimos 40 minutos, espera 15 segundos
         if len(st.session_state.message_timestamps) >= 8:
-            # Calcular el tiempo desde el primer mensaje en la lista
-            if (st.session_state.message_timestamps[-1] - st.session_state.message_timestamps[0]) <= 40:
-                st.session_state.waiting = True
-                st.warning("Hay mucha gente usando el servicio. Por favor, espere 15 segundos...")
-                
-                # Rueda girando
-                with st.spinner("Procesando..."):
-                    time.sleep(15)  # Espera 15 segundos
-                
-                st.session_state.waiting = False
-                st.session_state.message_count = 0  # Reinicia el contador después de esperar
+            st.session_state.waiting = True
+            st.warning("Hay mucha gente usando el servicio. Por favor, espere 15 segundos...")
+            
+            # Rueda girando
+            with st.spinner("Procesando..."):
+                time.sleep(15)  # Espera 15 segundos
+            
+            st.session_state.waiting = False
 
         # Envía el mensaje del usuario a Gemini y obtiene la respuesta
         try:
