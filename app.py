@@ -2,6 +2,11 @@ import os
 import time
 import streamlit as st
 import google.generativeai as gen_ai
+from difflib import SequenceMatcher
+
+# Función para calcular la similitud entre dos textos
+def similar(a, b):
+    return SequenceMatcher(None, a, b).ratio()
 
 # Configura Streamlit
 st.set_page_config(
@@ -92,7 +97,8 @@ if user_prompt:
     st.chat_message("user").markdown(user_prompt)
 
     # Verificar si el mensaje es repetitivo
-    if user_prompt.strip() in st.session_state.last_user_messages:
+    is_similar = any(similar(user_prompt.strip(), previous) > 0.90 for previous in st.session_state.last_user_messages)
+    if is_similar:
         st.warning("Por favor, no envíes mensajes repetitivos.")
     else:
         # Agrega el nuevo mensaje a la lista de mensajes anteriores
