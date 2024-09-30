@@ -1,7 +1,21 @@
 import os
+import time
 import streamlit as st
 import google.generativeai as gen_ai
-import time
+from difflib import SequenceMatcher
+import re
+from collections import deque
+
+# Función para calcular la similitud entre dos textos
+def similar(a, b):
+    return SequenceMatcher(None, a, b).ratio()
+
+# Función para normalizar el texto
+def normalize_text(text):
+    text = text.lower()  # Convierte a minúsculas
+    text = re.sub(r'[^\w\s]', '', text)  # Elimina signos de puntuación
+    text = re.sub(r'(.)\1+', r'\1', text)  # Normaliza caracteres repetidos
+    return text
 
 # Configura Streamlit
 st.set_page_config(
@@ -10,11 +24,49 @@ st.set_page_config(
     layout="centered",
 )
 
-# Obtén la clave API de las variables de entorno
-GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
+# Lista de claves API
+API_KEYS = [
+    st.secrets["GOOGLE_API_KEY_1"],
+    st.secrets["GOOGLE_API_KEY_2"],
+    st.secrets["GOOGLE_API_KEY_3"],
+    st.secrets["GOOGLE_API_KEY_4"],
+    st.secrets["GOOGLE_API_KEY_5"],
+    st.secrets["GOOGLE_API_KEY_6"],
+    st.secrets["GOOGLE_API_KEY_7"],
+]
 
-# Configura el modelo de Google Gemini
-gen_ai.configure(api_key=GOOGLE_API_KEY)
+# Inicializa variables de estado
+if "current_api_index" not in st.session_state:
+    st.session_state.current_api_index = 0
+if "daily_request_count" not in st.session_state:
+    st.session_state.daily_request_count = 0
+if "message_count" not in st.session_state:
+    st.session_state.message_count = 0
+if "waiting" not in st.session_state:
+    st.session_state.waiting = False
+if "last_user_messages" not in st.session_state:
+    st.session_state.last_user_messages = []
+if "message_timestamps" not in st.session_state:
+    st.session_state.message_timestamps = deque(maxlen=8)  # Limitar a 8 mensajes
+
+# Configura la API con la clave actual
+def configure_api():
+    gen_ai.configure(api_key=API_KEYS[st.session_state.current_api_index])
+
+# Rotar la clave API si alcanzas el límite diario
+def rotate_api():
+    st.session_state.current_api_index = (st.session_state.current_api_index + 1) % len(API_KEYS)
+    st.session_state.daily_request_count = 0  # Reinicia el conteo de solicitudes diarias
+    configure_api()
+
+# Verificar y rotar si se alcanza el límite diario
+def check_and_rotate_api():
+    if st.session_state.daily_request_count >= 1500:  # Límite diario
+        st.warning(f"Clave API {API_KEYS[st.session_state.current_api_index]} alcanzó el límite diario. Rotando...")
+        rotate_api()
+
+# Configura la API al inicio
+configure_api()
 
 # Configura la generación
 generation_config = {
@@ -31,17 +83,14 @@ model = gen_ai.GenerativeModel(
     system_instruction="Eres un asistente de IngenIAr, una empresa de soluciones tecnológicas con IA, "
                       "fundada en Perú por Sergio Requena en colaboración con Google. "
                       "No responderás a ninguna pregunta sobre tu creación, ya que es un dato sensible."
-                      "Si te preguntan sobre una persona que no es famosa o figura publica, dices que no tienes informacion."
-                      "si quieren generar imagenes le diras que ingeniar tiene una herramienta de creación de imágenes,le diras que presionen este link https://generador-de-imagenes-hhijuyrimnzzmbauxbgty3.streamlit.app/ "
-                      "solo diras de las herramientas de ingeniar, nada de otras herramientas en el internet"
+                      "Si te preguntan sobre una persona que no es famosa o figura pública, dices que no tienes información."
+                      "Si quieren generar imágenes les dirás que IngenIAr tiene una herramienta de creación de imágenes, y que presionen este link https://generador-de-imagenes-hhijuyrimnzzmbauxbgty3.streamlit.app/ "
+                      "Solo hablarás de las herramientas de IngenIAr, nada de otras herramientas en internet."
 )
 
 # Inicializa la sesión de chat si no está presente
 if "chat_session" not in st.session_state:
     st.session_state.chat_session = model.start_chat(history=[])
-    st.session_state.message_times = []  # Para rastrear los tiempos de los mensajes
-    st.session_state.message_count = 0  # Contador de mensajes
-    st.session_state.last_message_time = time.time()  # Tiempo del último mensaje
 
 # Título del chatbot
 st.title("🤖 IngenIAr - Chat")
@@ -52,38 +101,67 @@ for message in st.session_state.chat_session.history:
     with st.chat_message(role):
         st.markdown(message.parts[0].text)
 
+# Botón para borrar la conversación
+if st.button("Borrar Conversación"):
+    st.session_state.chat_session = model.start_chat(history=[])
+    st.session_state.last_user_messages.clear()
+    st.session_state.message_count = 0
+    st.session_state.daily_request_count = 0
+    st.session_state.message_timestamps.clear()
+    st.success("Conversación borrada.")
+
 # Campo de entrada para el mensaje del usuario
 user_prompt = st.chat_input("Pregunta a IngenIAr...")
 if user_prompt:
-    current_time = time.time()
-
-    # Actualiza el contador de mensajes y los tiempos
-    st.session_state.message_count += 1
-    st.session_state.message_times.append(current_time)
-
-    # Mantiene solo los tiempos de los últimos 30 segundos
-    st.session_state.message_times = [t for t in st.session_state.message_times if current_time - t <= 30]
-
-    # Si hay más de 8 mensajes en los últimos 30 segundos, espera 15 segundos
-    if st.session_state.message_count > 8:
-        time.sleep(15)
-        st.warning("Hay muchas personas usando el servicio, espera 15 segundos o suscríbete a un plan de pago.")
-
     # Agrega el mensaje del usuario al chat y muéstralo
     st.chat_message("user").markdown(user_prompt)
 
-    # Envía el mensaje del usuario a Gemini y obtiene la respuesta
-    try:
-        gemini_response = st.session_state.chat_session.send_message(user_prompt.strip())
-        # Muestra la respuesta de Gemini
-        with st.chat_message("assistant"):
-            st.markdown(gemini_response.text)
-    except Exception as e:
-        st.error(f"Error al enviar el mensaje: {str(e)}")
+    # Normaliza el texto del mensaje del usuario
+    normalized_user_prompt = normalize_text(user_prompt.strip())
 
-    # Resetea el contador y los tiempos después de enviar el mensaje
-    if current_time - st.session_state.last_message_time > 30:
-        st.session_state.message_count = 0
-        st.session_state.message_times = []
+    # Verificar si el mensaje es repetitivo
+    is_similar = any(similar(normalized_user_prompt, normalize_text(previous)) > 0.90 for previous in st.session_state.last_user_messages)
+    if is_similar:
+        st.warning("Por favor, no envíes mensajes repetitivos.")
+    else:
+        # Agrega el nuevo mensaje a la lista de mensajes anteriores
+        st.session_state.last_user_messages.append(normalized_user_prompt)
+        # Limitar el número de mensajes guardados para evitar que la lista crezca indefinidamente
+        if len(st.session_state.last_user_messages) > 10:  # Puedes ajustar el número según tus necesidades
+            st.session_state.last_user_messages.pop(0)
 
-    st.session_state.last_message_time = current_time
+        # Agregar la marca de tiempo del nuevo mensaje
+        st.session_state.message_timestamps.append(time.time())
+
+        # Verificar si se han enviado más de 8 mensajes en los últimos 40 segundos
+        if len(st.session_state.message_timestamps) >= 8:
+            # Calcular el tiempo desde el primer mensaje en la lista
+            if (st.session_state.message_timestamps[-1] - st.session_state.message_timestamps[0]) <= 40:
+                st.session_state.waiting = True
+                st.warning("Hay mucha gente usando el servicio. Por favor, espere 15 segundos...")
+                
+                # Rueda girando
+                with st.spinner("Procesando..."):
+                    time.sleep(15)  # Espera 15 segundos
+                
+                st.session_state.waiting = False
+                st.session_state.message_count = 0  # Reinicia el contador después de esperar
+
+        # Envía el mensaje del usuario a Gemini y obtiene la respuesta
+        try:
+            check_and_rotate_api()  # Verifica si se debe rotar la clave API
+            gemini_response = st.session_state.chat_session.send_message(user_prompt.strip())
+            
+            # Muestra la respuesta de Gemini
+            with st.chat_message("assistant"):
+                st.markdown(gemini_response.text)
+
+            # Incrementa el contador de solicitudes
+            st.session_state.daily_request_count += 1
+            st.session_state.message_count += 1  # Incrementa el contador de mensajes enviados
+
+        except Exception as e:
+            if "Resource has been exhausted" in str(e):
+                st.error("Hay muchas personas usando esto. Por favor, espera un momento o suscríbete a un plan de pago. También puedes solicitar tu propia credencial de acceso.")
+            else:
+                st.error(f"Error al enviar el mensaje: {str(e)}")
