@@ -92,10 +92,12 @@ if user_prompt:
     # Si ya se enviaron 5 mensajes, espera 15 segundos
     if st.session_state.message_count >= 5:
         st.session_state.waiting = True
-        with st.spinner("Esperando 15 segundos..."):
-            for i in range(15):
-                time.sleep(1)
-                st.progress((i + 1) / 15)  # Muestra la barra de progreso
+        st.warning("Hay mucha gente usando el servicio. Por favor, espere 15 segundos...")
+        
+        # Barra de progreso
+        for i in range(15):
+            time.sleep(1)
+            st.progress((i + 1) / 15)  # Muestra la barra de progreso
         st.session_state.waiting = False
         st.session_state.message_count = 0  # Reinicia el contador después de esperar
 
