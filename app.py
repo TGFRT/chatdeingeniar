@@ -30,6 +30,8 @@ if "message_count" not in st.session_state:
     st.session_state.message_count = 0
 if "waiting" not in st.session_state:
     st.session_state.waiting = False
+if "last_user_messages" not in st.session_state:
+    st.session_state.last_user_messages = []
 
 # Configura la API con la clave actual
 def configure_api():
@@ -89,33 +91,43 @@ if user_prompt:
     # Agrega el mensaje del usuario al chat y muéstralo
     st.chat_message("user").markdown(user_prompt)
 
-    # Si ya se enviaron 5 mensajes, espera 15 segundos
-    if st.session_state.message_count >= 5:
-        st.session_state.waiting = True
-        st.warning("Hay mucha gente usando el servicio. Por favor, espere 15 segundos...")
-        
-        # Rueda girando
-        with st.spinner("Procesando..."):
-            time.sleep(15)  # Espera 15 segundos
-        
-        st.session_state.waiting = False
-        st.session_state.message_count = 0  # Reinicia el contador después de esperar
+    # Verificar si el mensaje es repetitivo
+    if user_prompt.strip() in st.session_state.last_user_messages:
+        st.warning("Por favor, no envíes mensajes repetitivos.")
+    else:
+        # Agrega el nuevo mensaje a la lista de mensajes anteriores
+        st.session_state.last_user_messages.append(user_prompt.strip())
+        # Limitar el número de mensajes guardados para evitar que la lista crezca indefinidamente
+        if len(st.session_state.last_user_messages) > 10:  # Puedes ajustar el número según tus necesidades
+            st.session_state.last_user_messages.pop(0)
 
-    # Envía el mensaje del usuario a Gemini y obtiene la respuesta
-    try:
-        check_and_rotate_api()  # Verifica si se debe rotar la clave API
-        gemini_response = st.session_state.chat_session.send_message(user_prompt.strip())
-        
-        # Muestra la respuesta de Gemini
-        with st.chat_message("assistant"):
-            st.markdown(gemini_response.text)
+        # Si ya se enviaron 5 mensajes, espera 15 segundos
+        if st.session_state.message_count >= 5:
+            st.session_state.waiting = True
+            st.warning("Hay mucha gente usando el servicio. Por favor, espere 15 segundos...")
+            
+            # Rueda girando
+            with st.spinner("Procesando..."):
+                time.sleep(15)  # Espera 15 segundos
+            
+            st.session_state.waiting = False
+            st.session_state.message_count = 0  # Reinicia el contador después de esperar
 
-        # Incrementa el contador de solicitudes
-        st.session_state.daily_request_count += 1
-        st.session_state.message_count += 1  # Incrementa el contador de mensajes enviados
+        # Envía el mensaje del usuario a Gemini y obtiene la respuesta
+        try:
+            check_and_rotate_api()  # Verifica si se debe rotar la clave API
+            gemini_response = st.session_state.chat_session.send_message(user_prompt.strip())
+            
+            # Muestra la respuesta de Gemini
+            with st.chat_message("assistant"):
+                st.markdown(gemini_response.text)
 
-    except Exception as e:
-        if "Resource has been exhausted" in str(e):
-            st.error("Hay muchas personas usando esto. Por favor, espera un momento o suscríbete a un plan de pago. También puedes solicitar tu propia credencial de acceso.")
-        else:
-            st.error(f"Error al enviar el mensaje: {str(e)}")
+            # Incrementa el contador de solicitudes
+            st.session_state.daily_request_count += 1
+            st.session_state.message_count += 1  # Incrementa el contador de mensajes enviados
+
+        except Exception as e:
+            if "Resource has been exhausted" in str(e):
+                st.error("Hay muchas personas usando esto. Por favor, espera un momento o suscríbete a un plan de pago. También puedes solicitar tu propia credencial de acceso.")
+            else:
+                st.error(f"Error al enviar el mensaje: {str(e)}")
