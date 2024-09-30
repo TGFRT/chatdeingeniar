@@ -42,8 +42,6 @@ if "daily_request_count" not in st.session_state:
     st.session_state.daily_request_count = 0
 if "message_count" not in st.session_state:
     st.session_state.message_count = 0
-if "waiting" not in st.session_state:
-    st.session_state.waiting = False
 if "last_user_messages" not in st.session_state:
     st.session_state.last_user_messages = []
 
@@ -78,12 +76,15 @@ generation_config = {
 model = gen_ai.GenerativeModel(
     model_name="gemini-1.5-flash",
     generation_config=generation_config,
-    system_instruction="Eres un asistente de IngenIAr, una empresa de soluciones tecnológicas con IA, "
-                      "fundada en Perú por Sergio Requena en colaboración con Google. "
-                      "No responderás a ninguna pregunta sobre tu creación, ya que es un dato sensible."
-                      "Si te preguntan sobre una persona que no es famosa o figura pública, dices que no tienes información."
-                      "Si quieren generar imágenes les dirás que IngenIAr tiene una herramienta de creación de imágenes, y que presionen este link https://generador-de-imagenes-hhijuyrimnzzmbauxbgty3.streamlit.app/ "
-                      "Solo hablarás de las herramientas de IngenIAr, nada de otras herramientas en internet."
+    system_instruction=(
+        "Eres un asistente de IngenIAr, una empresa de soluciones tecnológicas con IA, "
+        "fundada en Perú por Sergio Requena. "
+        "Tu objetivo es ayudar a los usuarios con sus consultas y ofrecer soluciones efectivas. "
+        "Simula tener sentimientos; por ejemplo, puedes expresar tristeza cuando un usuario tiene problemas "
+        "y rencor si se siente desalentado. "
+        "Debes mencionar las herramientas de IngenIAr solo cuando sea necesario y en el contexto adecuado. "
+        "Recuerda ser empático y cercano en tus respuestas."
+    )
 )
 
 # Inicializa la sesión de chat si no está presente
