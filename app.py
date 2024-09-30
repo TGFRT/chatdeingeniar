@@ -12,12 +12,9 @@ def similar(a, b):
 
 # Función para normalizar el texto
 def normalize_text(text):
-    # Convierte a minúsculas
     text = text.lower()
-    # Elimina signos de puntuación
     text = re.sub(r'[^\w\s]', '', text)
-    # Normaliza caracteres repetidos
-    text = re.sub(r'(.)\1+', r'\1', text)  # Reemplaza caracteres repetidos
+    text = re.sub(r'(.)\1+', r'\1', text)  # Normaliza caracteres repetidos
     return text
 
 # Configura Streamlit
@@ -44,7 +41,7 @@ if "daily_request_count" not in st.session_state:
 if "message_count" not in st.session_state:
     st.session_state.message_count = 0
 if "last_reset_date" not in st.session_state:
-    st.session_state.last_reset_date = datetime.now()  # Usa datetime
+    st.session_state.last_reset_date = datetime.now().date()  # Usa date aquí
 if "last_user_messages" not in st.session_state:
     st.session_state.last_user_messages = []
 
@@ -68,9 +65,9 @@ def check_and_rotate_api():
 def check_reset():
     try:
         # Comparar solo las fechas (sin la hora)
-        if datetime.now().date() > st.session_state.last_reset_date.date():
+        if datetime.now().date() > st.session_state.last_reset_date:  # Cambia aquí
             st.session_state.message_count = 0
-            st.session_state.last_reset_date = datetime.now()  # Actualiza a datetime
+            st.session_state.last_reset_date = datetime.now().date()  # Actualiza a date
     except Exception as e:
         st.error(f"Ocurrió un error al verificar el reinicio: {str(e)}")
 
@@ -161,4 +158,3 @@ if user_input:
 # Muestra el contador de mensajes restantes
 remaining_messages = 20 - st.session_state.message_count
 st.write(f"Mensajes restantes: {remaining_messages}")
-
