@@ -1,7 +1,7 @@
 import os
+import time
 import streamlit as st
 import google.generativeai as gen_ai
-import time
 
 # Configura Streamlit
 st.set_page_config(
@@ -26,6 +26,10 @@ if "current_api_index" not in st.session_state:
     st.session_state.current_api_index = 0
 if "daily_request_count" not in st.session_state:
     st.session_state.daily_request_count = 0
+if "message_count" not in st.session_state:
+    st.session_state.message_count = 0
+if "waiting" not in st.session_state:
+    st.session_state.waiting = False
 
 # Configura la API con la clave actual
 def configure_api():
@@ -85,6 +89,16 @@ if user_prompt:
     # Agrega el mensaje del usuario al chat y muéstralo
     st.chat_message("user").markdown(user_prompt)
 
+    # Si ya se enviaron 5 mensajes, espera 15 segundos
+    if st.session_state.message_count >= 5:
+        st.session_state.waiting = True
+        with st.spinner("Esperando 15 segundos..."):
+            for i in range(15):
+                time.sleep(1)
+                st.progress((i + 1) / 15)  # Muestra la barra de progreso
+        st.session_state.waiting = False
+        st.session_state.message_count = 0  # Reinicia el contador después de esperar
+
     # Envía el mensaje del usuario a Gemini y obtiene la respuesta
     try:
         check_and_rotate_api()  # Verifica si se debe rotar la clave API
@@ -93,9 +107,10 @@ if user_prompt:
         # Muestra la respuesta de Gemini
         with st.chat_message("assistant"):
             st.markdown(gemini_response.text)
-        
+
         # Incrementa el contador de solicitudes
         st.session_state.daily_request_count += 1
+        st.session_state.message_count += 1  # Incrementa el contador de mensajes enviados
 
     except Exception as e:
         if "Resource has been exhausted" in str(e):
