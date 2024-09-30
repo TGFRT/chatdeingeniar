@@ -99,6 +99,12 @@ if "chat_session" not in st.session_state:
 # Título del chatbot
 st.title("🤖 IngenIAr - Chat")
 
+# Mostrar el historial de chat
+for message in st.session_state.chat_session.history:
+    role = "assistant" if message.role == "model" else "user"
+    with st.chat_message(role):
+        st.markdown(message.parts[0].text)
+
 # Botón para borrar la conversación
 if st.button("Borrar Conversación"):
     st.session_state.chat_session = model.start_chat(history=[])
@@ -147,7 +153,7 @@ if user_input:
             except Exception as e:
                 # Mensaje de error general
                 st.error("Hay mucha gente usando esto. Por favor, espera un momento o suscríbete a un plan de pago.")
-                
+
 # Muestra el contador de mensajes restantes
 remaining_messages = 20 - st.session_state.message_count
 st.write(f"Mensajes restantes: {remaining_messages}")
