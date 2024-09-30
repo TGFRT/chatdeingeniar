@@ -3,10 +3,21 @@ import time
 import streamlit as st
 import google.generativeai as gen_ai
 from difflib import SequenceMatcher
+import re
 
 # Función para calcular la similitud entre dos textos
 def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
+
+# Función para normalizar el texto
+def normalize_text(text):
+    # Convierte a minúsculas
+    text = text.lower()
+    # Elimina signos de puntuación
+    text = re.sub(r'[^\w\s]', '', text)
+    # Normaliza caracteres repetidos
+    text = re.sub(r'(.)\1+', r'\1', text)  # Reemplaza caracteres repetidos
+    return text
 
 # Configura Streamlit
 st.set_page_config(
@@ -96,13 +107,16 @@ if user_prompt:
     # Agrega el mensaje del usuario al chat y muéstralo
     st.chat_message("user").markdown(user_prompt)
 
+    # Normaliza el texto del mensaje del usuario
+    normalized_user_prompt = normalize_text(user_prompt.strip())
+
     # Verificar si el mensaje es repetitivo
-    is_similar = any(similar(user_prompt.strip(), previous) > 0.90 for previous in st.session_state.last_user_messages)
+    is_similar = any(similar(normalized_user_prompt, normalize_text(previous)) > 0.90 for previous in st.session_state.last_user_messages)
     if is_similar:
         st.warning("Por favor, no envíes mensajes repetitivos.")
     else:
         # Agrega el nuevo mensaje a la lista de mensajes anteriores
-        st.session_state.last_user_messages.append(user_prompt.strip())
+        st.session_state.last_user_messages.append(normalized_user_prompt)
         # Limitar el número de mensajes guardados para evitar que la lista crezca indefinidamente
         if len(st.session_state.last_user_messages) > 10:  # Puedes ajustar el número según tus necesidades
             st.session_state.last_user_messages.pop(0)
