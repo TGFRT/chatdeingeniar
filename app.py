@@ -94,10 +94,10 @@ if user_prompt:
         st.session_state.waiting = True
         st.warning("Hay mucha gente usando el servicio. Por favor, espere 15 segundos...")
         
-        # Barra de progreso
-        for i in range(15):
-            time.sleep(1)
-            st.progress((i + 1) / 15)  # Muestra la barra de progreso
+        # Rueda girando
+        with st.spinner("Procesando..."):
+            time.sleep(15)  # Espera 15 segundos
+        
         st.session_state.waiting = False
         st.session_state.message_count = 0  # Reinicia el contador después de esperar
 
