@@ -44,7 +44,7 @@ if "daily_request_count" not in st.session_state:
 if "message_count" not in st.session_state:
     st.session_state.message_count = 0
 if "last_reset_date" not in st.session_state:
-    st.session_state.last_reset_date = datetime.now()
+    st.session_state.last_reset_date = datetime.now().date()
 if "last_user_messages" not in st.session_state:
     st.session_state.last_user_messages = []
 
@@ -66,9 +66,9 @@ def check_and_rotate_api():
 
 # Verifica si se debe reiniciar el contador de mensajes
 def check_reset():
-    if datetime.now().date() > st.session_state.last_reset_date.date():
+    if datetime.now().date() > st.session_state.last_reset_date:
         st.session_state.message_count = 0
-        st.session_state.last_reset_date = datetime.now()
+        st.session_state.last_reset_date = datetime.now().date()
 
 # Configura la API al inicio
 configure_api()
@@ -157,3 +157,4 @@ if user_input:
 # Muestra el contador de mensajes restantes
 remaining_messages = 20 - st.session_state.message_count
 st.write(f"Mensajes restantes: {remaining_messages}")
+
