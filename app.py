@@ -98,4 +98,7 @@ if user_prompt:
         st.session_state.daily_request_count += 1
 
     except Exception as e:
-        st.error(f"Error al enviar el mensaje: {str(e)}")
+        if "Resource has been exhausted" in str(e):
+            st.error("Hay muchas personas usando esto. Por favor, espera un momento o suscríbete a un plan de pago. También puedes solicitar tu propia credencial de acceso.")
+        else:
+            st.error(f"Error al enviar el mensaje: {str(e)}")
